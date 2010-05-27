@@ -1,0 +1,11 @@
+<phpunit bootstrap="./gisconverter.php" 
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         stopOnFailure="true"
+>
+    <testsuite name="gisconverter">
+        <directory suffix=".php">./tests</directory>
+    </testsuite>
+</phpunit>
