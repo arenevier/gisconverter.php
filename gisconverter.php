@@ -112,6 +112,10 @@ abstract class Geometry implements iGeometry {
     public function equals(Geometry $geom) {
         throw new UnimplementedMethod(__FUNCTION__, get_called_class());
     }
+
+    public function __toString() {
+        return $this->toWKT();
+    }
 }
 
 class WKT extends Decoder {
