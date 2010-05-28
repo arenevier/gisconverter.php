@@ -95,7 +95,7 @@ interface iGeometry {
 }
 
 abstract class Geometry implements iGeometry {
-    const geomstr = "";
+    const name = "";
 
     public function toGeoJSON() {
         throw new UnimplementedMethod(__FUNCTION__, get_called_class());
@@ -435,10 +435,10 @@ class KML extends Decoder {
 
         if ($type == "MultiGeometry") {
             if (count($components)) {
-                $possibletype = $components[0]::geomstr;
+                $possibletype = $components[0]::name;
                 $sametype = true;
                 foreach (array_slice($components, 1) as $component) {
-                    if ($component::geomstr != $possibletype) {
+                    if ($component::name != $possibletype) {
                         $sametype = false;
                         break;
                     }
@@ -469,7 +469,7 @@ class KML extends Decoder {
 }
 
 class Point extends Geometry {
-    const geomstr = "Point";
+    const name = "Point";
 
     private $lon;
     private $lat;
@@ -501,15 +501,15 @@ class Point extends Geometry {
     }
 
     public function toWKT() {
-        return strtoupper(static::geomstr) . "({$this->lon} {$this->lat})";
+        return strtoupper(static::name) . "({$this->lon} {$this->lat})";
     }
 
     public function toKML() {
-        return "<" . static::geomstr . "><coordinates>{$this->lon},{$this->lat}</coordinates></" . static::geomstr . ">";
+        return "<" . static::name . "><coordinates>{$this->lon},{$this->lat}</coordinates></" . static::name . ">";
     }
 
     public function toGeoJSON() {
-        $value = (object)array ('type' => static::geomstr, 'coordinates' => array($this->lon, $this->lat));
+        $value = (object)array ('type' => static::name, 'coordinates' => array($this->lon, $this->lat));
         return json_encode($value);
     }
 
@@ -559,7 +559,7 @@ abstract class Collection extends Geometry {
                 return "(" . implode (',', array_map($recursiveWKT, $geom->components)). ")";
             }
        };
-        return strtoupper(static::geomstr) . call_user_func($recursiveWKT, $this);
+        return strtoupper(static::name) . call_user_func($recursiveWKT, $this);
     }
 
     public function toGeoJSON() {
@@ -570,7 +570,7 @@ abstract class Collection extends Geometry {
                 return array_map($recurviseJSON, $geom->components);
             }
         };
-        $value = (object)array ('type' => static::geomstr, 'coordinates' => call_user_func($recurviseJSON, $this));
+        $value = (object)array ('type' => static::name, 'coordinates' => call_user_func($recurviseJSON, $this));
         return json_encode($value);
     }
 
@@ -581,12 +581,12 @@ abstract class Collection extends Geometry {
 }
 
 class MultiPoint extends Collection {
-    const geomstr = "MultiPoint";
+    const name = "MultiPoint";
 
     public function __construct($components) {
         foreach ($components as $comp) {
             if (!($comp instanceof Point)) {
-                throw new InvalidFeature(__CLASS__, static::geomstr . " can only contain Point elements");
+                throw new InvalidFeature(__CLASS__, static::name . " can only contain Point elements");
             }
         }
         $this->components = $components;
@@ -610,7 +610,7 @@ class MultiPoint extends Collection {
 }
 
 class LineString extends MultiPoint {
-    const geomstr = "LineString";
+    const name = "LineString";
     public function __construct($components) {
         if (count ($components) < 2) {
             throw new InvalidFeature(__CLASS__, "LineString must have at least 2 points");
@@ -619,15 +619,15 @@ class LineString extends MultiPoint {
     }
 
     public function toKML() {
-        return "<" . static::geomstr . "><coordinates>" . implode(" ", array_map(function($comp) {
+        return "<" . static::name . "><coordinates>" . implode(" ", array_map(function($comp) {
                     return "{$comp->lon},{$comp->lat}";
-                }, $this->components)). "</coordinates></" . static::geomstr . ">";
+                }, $this->components)). "</coordinates></" . static::name . ">";
     }
 
 }
 
 class MultiLineString extends Collection {
-    const geomstr = "MultiLineString";
+    const name = "MultiLineString";
 
     public function __construct($components) {
         foreach ($components as $comp) {
@@ -641,7 +641,7 @@ class MultiLineString extends Collection {
 }
 
 class LinearRing extends LineString {
-    const geomstr = "LinearRing";
+    const name = "LinearRing";
     public function __construct($components) {
         $first = $components[0];
         $last = end($components);
@@ -732,7 +732,7 @@ class LinearRing extends LineString {
 }
 
 class Polygon extends Collection {
-    const geomstr = "Polygon";
+    const name = "Polygon";
     public function __construct($components) {
         $outer = $components[0];
         foreach (array_slice($components, 1) as $inner) {
@@ -753,13 +753,13 @@ class Polygon extends Collection {
         $str .= implode("", array_map(function($comp) {
             return '<innerBoundaryIs>' . $comp->toKML() . '</innerBoundaryIs>';
         }, array_slice($this->components, 1)));
-        return '<' . self::geomstr . '>' . $str . '</' . self::geomstr . '>';
+        return '<' . self::name . '>' . $str . '</' . self::name . '>';
     }
 
 }
 
 class MultiPolygon extends Collection {
-    const geomstr = "MultiPolygon";
+    const name = "MultiPolygon";
 
     public function __construct($components) {
         foreach ($components as $comp) {
@@ -773,7 +773,7 @@ class MultiPolygon extends Collection {
 }
 
 class GeometryCollection extends Collection {
-    const geomstr = "GeometryCollection";
+    const name = "GeometryCollection";
 
     public function __construct($components) {
         foreach ($components as $comp) {
@@ -785,13 +785,13 @@ class GeometryCollection extends Collection {
     }
 
     public function toWKT() {
-        return strtoupper(static::geomstr) . "(" . implode(',', array_map(function ($comp) {
+        return strtoupper(static::name) . "(" . implode(',', array_map(function ($comp) {
             return $comp->toWKT();
         }, $this->components)) . ')';
     }
 
     public function toGeoJSON() {
-        $value = (object)array ('type' => static::geomstr, 'geometries' =>
+        $value = (object)array ('type' => static::name, 'geometries' =>
             array_map(function ($comp) {
                 // XXX: quite ugly
                 return json_decode($comp->toGeoJSON());
