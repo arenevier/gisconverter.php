@@ -1,5 +1,5 @@
 gisconvert.php is available under the modified bsd license, and can be used and
-redistributed under the conditions of this license. A copy of modified besd
+redistributed under the conditions of this license. A copy of modified bsd
 license is included in this file.
 
 ===============================================================================
