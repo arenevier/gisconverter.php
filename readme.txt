@@ -1,6 +1,6 @@
 gisconverter.php is a php library to convert vector geometries between
-different formats. Currently, WKT, GeoJSON, and KML formats are supported. See
-example.php for a documentation of how to use the library
+different formats. Currently, WKT, GeoJSON, KML and GPX formats are supported.
+See example.php for a documentation of how to use the library
 
 gisconverter.php needs php at least 5.3
 

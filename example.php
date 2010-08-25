@@ -19,6 +19,10 @@ function wkt_to_kml ($text) {
     $decoder = new gisconverter\WKT();
     return $decoder->geomFromText($text)->toKML();
 }
+function wkt_to_gpx($text) {
+    $decoder = new gisconverter\WKT();
+    return $decoder->geomFromText($text)->toGPX();
+}
 function geojson_to_wkt ($text) {
     $decoder = new gisconverter\GeoJSON();
     return $decoder->geomFromText($text)->toWKT();
@@ -27,6 +31,10 @@ function geojson_to_kml ($text) {
     $decoder = new gisconverter\GeoJSON();
     return $decoder->geomFromText($text)->toKML();
 }
+function geojson_to_gpx ($text) {
+    $decoder = new gisconverter\GeoJSON();
+    return $decoder->geomFromText($text)->toGPX();
+}
 function kml_to_wkt ($text) {
     $decoder = new gisconverter\KML();
     return $decoder->geomFromText($text)->toWKT();
@@ -34,6 +42,22 @@ function kml_to_wkt ($text) {
 function kml_to_geojson ($text) {
     $decoder = new gisconverter\KML();
     return $decoder->geomFromText($text)->toGeoJSON();
+}
+function kml_to_gpx ($text) {
+    $decoder = new gisconverter\KML();
+    return $decoder->geomFromText($text)->toGPX();
+}
+function gpx_to_wkt ($text) {
+    $decoder = new gisconverter\GPX();
+    return $decoder->geomFromText($text)->toWKT();
+}
+function gpx_to_geojson ($text) {
+    $decoder = new gisconverter\GPX();
+    return $decoder->geomFromText($text)->toGeoJSON();
+}
+function gpx_to_kml ($text) {
+    $decoder = new gisconverter\GPX();
+    return $decoder->geomFromText($text)->toGPX();
 }
 
 $decoder = new gisconverter\WKT(); # create a WKT decoder in gisconverter namespace
@@ -57,6 +81,9 @@ print kml_to_wkt('<Polygon><outerBoundaryIs><LinearRing><coordinates>10,10 10,20
 print "\n\n";
 
 print kml_to_geojson('<Polygon><outerBoundaryIs><LinearRing><coordinates>10,10 10,20 20,20 20,15 10,10</coordinates></LinearRing></outerBoundaryIs></Polygon>');
+print "\n\n";
+
+print kml_to_gpx('<LineString><coordinates>3.5,5.6 4.8,10.5 10,10</coordinates></LineString>');
 print "\n\n";
 
 ?>

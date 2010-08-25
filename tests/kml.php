@@ -108,6 +108,33 @@ class KML extends PHPUnit_Framework_TestCase {
         $this->assertEquals($geom->toKML(), '<MultiGeometry><Point><coordinates>10,10</coordinates></Point><Point><coordinates>30,30</coordinates></Point><LineString><coordinates>15,15 20,20</coordinates></LineString></MultiGeometry>');
     }
 
+    /**
+     * @expectedException gisconverter\Unimplemented
+     */
+    public function invalidConversion1() {
+        $decoder = new gisconverter\WKT();
+        $geom = $decoder->geomFromText('POINT(10 10)');
+        $geom->toGPX('rte');
+    }
+
+    /**
+     * @expectedException gisconverter\Unimplemented
+     */
+    public function invalidConversion2() {
+        $decoder = new gisconverter\WKT();
+        $geom = $decoder->geomFromText('MULTIPOINT(3.5 5.6,4.8 10.5,10 10)');
+        $geom->toGPX();
+    }
+
+    /**
+     * @expectedException gisconverter\Unimplemented
+     */
+    public function invalidConversion3() {
+        $decoder = new gisconverter\WKT();
+        $geom = $decoder->geomFromText('LINESTRING(3.5 5.6,4.8 10.5,10 10)');
+        $geom->toGPX('wpt');
+    }
+
 }
 
 ?>

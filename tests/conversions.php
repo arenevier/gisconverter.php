@@ -13,10 +13,12 @@ class Conversions extends PHPUnit_Framework_TestCase {
         $geom = $this->default_decoder->geomFromText('POINT(10 10)');
         $this->assertEquals($geom->toGeoJSON(), '{"type":"Point","coordinates":[10,10]}');
         $this->assertEquals($geom->toKML(), '<Point><coordinates>10,10</coordinates></Point>');
+        $this->assertEquals($geom->toGPX(), '<wpt lon="10" lat="10"></wpt>');
 
         $geom = $this->default_decoder->geomFromText('POINT(0 0)');
         $this->assertEquals($geom->toGeoJSON(), '{"type":"Point","coordinates":[0,0]}');
         $this->assertEquals($geom->toKML(), '<Point><coordinates>0,0</coordinates></Point>');
+        $this->assertEquals($geom->toGPX(), '<wpt lon="0" lat="0"></wpt>');
     }
 
     public function testMultiPoint() {
@@ -33,6 +35,9 @@ class Conversions extends PHPUnit_Framework_TestCase {
         $geom = $this->default_decoder->geomFromText('LINESTRING(3.5 5.6,4.8 10.5,10 10)');
         $this->assertEquals($geom->toGeoJSON(), '{"type":"LineString","coordinates":[[3.5,5.6],[4.8,10.5],[10,10]]}');
         $this->assertEquals($geom->toKML(), '<LineString><coordinates>3.5,5.6 4.8,10.5 10,10</coordinates></LineString>');
+        $this->assertEquals($geom->toGPX(), '<trkseg><trkpt lon="3.5" lat="5.6"></trkpt><trkpt lon="4.8" lat="10.5"></trkpt><trkpt lon="10" lat="10"></trkpt></trkseg>');
+        $this->assertEquals($geom->toGPX('trkseg'), '<trkseg><trkpt lon="3.5" lat="5.6"></trkpt><trkpt lon="4.8" lat="10.5"></trkpt><trkpt lon="10" lat="10"></trkpt></trkseg>');
+        $this->assertEquals($geom->toGPX('rte'), '<rte><rtept lon="3.5" lat="5.6"></rtept><rtept lon="4.8" lat="10.5"></rtept><rtept lon="10" lat="10"></rtept></rte>');
     }
 
     public function testMultiLineString() {

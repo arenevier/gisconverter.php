@@ -88,6 +88,12 @@ interface iGeometry {
     public function toWKT();
 
     /*
+     * @param mode: trkseg, rte or wpt
+     * @return string
+     */
+    public function toGPX($mode = null);
+
+    /*
      * @param Geometry $geom
      * @return boolean
      */
@@ -102,6 +108,10 @@ abstract class Geometry implements iGeometry {
     }
 
     public function toKML() {
+        throw new UnimplementedMethod(__FUNCTION__, get_called_class());
+    }
+
+    public function toGPX($mode = null) {
         throw new UnimplementedMethod(__FUNCTION__, get_called_class());
     }
 
@@ -342,7 +352,7 @@ class GeoJSON extends Decoder {
 
 }
 
-class KML extends Decoder {
+abstract class XML extends Decoder {
     static public function geomFromText($text) {
         if (!function_exists("simplexml_load_string") || !function_exists("libxml_use_internal_errors")) {
             throw new UnavailableResource("simpleXML");
@@ -355,7 +365,7 @@ class KML extends Decoder {
         }
 
         try {
-            $geom = self::_geomFromXML($xmlobj);
+            $geom = static::_geomFromXML($xmlobj);
         } catch(InvalidText $e) {
             throw new InvalidText(__CLASS__, $text);
         } catch(\Exception $e) {
@@ -364,7 +374,10 @@ class KML extends Decoder {
 
         return $geom;
     }
+    protected static function _geomFromXML($xml) {}
+}
 
+class KML extends XML {
     static protected function parsePoint($xml) {
         $coordinates = self::_extractCoordinates($xml);
         $coords = preg_split('/,/', (string)$coordinates[0]);
@@ -465,7 +478,70 @@ class KML extends Decoder {
         $constructor = __NAMESPACE__ . '\\' . $type;
         return new $constructor($components);
     }
+}
 
+class GPX extends XML {
+    static protected function _extractCoordinates($xml) {
+        $attributes = $xml->attributes();
+        $lon = (string) $attributes['lon'];
+        $lat = (string) $attributes['lat'];
+        if (!$lon or !$lat) {
+            throw new InvalidText(__CLASS__);
+        }
+        return array($lon, $lat);
+    }
+
+    static protected function parseTrkseg($xml) {
+        $res = array();
+        foreach ($xml->children() as $elem) {
+            if (strtolower($elem->getName()) == "trkpt") {
+                $res[] = new Point(self::_extractCoordinates($elem));
+            }
+        }
+        return $res;
+    }
+
+    static protected function parseRte($xml) {
+        $res = array();
+        foreach ($xml->children() as $elem) {
+            if (strtolower($elem->getName()) == "rtept") {
+                $res[] = new Point(self::_extractCoordinates($elem));
+            }
+        }
+        return $res;
+    }
+
+    static protected function parseWpt($xml) {
+        return self::_extractCoordinates($xml);
+    }
+
+    static protected function _geomFromXML($xml) {
+        foreach (array("Trkseg", "Rte", "Wpt") as $kml_type) {
+            if (strtolower($kml_type) == $xml->getName()) {
+                $type = $kml_type;
+                break;
+            }
+        }
+
+        if (!isset($type)) {
+            throw new InvalidText(__CLASS__);
+        }
+
+        try {
+            $components = call_user_func(array('self', 'parse'.$type), $xml);
+        } catch(InvalidText $e) {
+            throw new InvalidText(__CLASS__);
+        } catch(\Exception $e) {
+            throw $e;
+        }
+
+        if ($type == "Trkseg" or $type == "Rte") {
+            $constructor = __NAMESPACE__ . '\\' . 'LineString';
+        } else if ($type == "Wpt") {
+            $constructor = __NAMESPACE__ . '\\' . 'Point';
+        }
+        return new $constructor($components);
+    }
 }
 
 class Point extends Geometry {
@@ -506,6 +582,16 @@ class Point extends Geometry {
 
     public function toKML() {
         return "<" . static::name . "><coordinates>{$this->lon},{$this->lat}</coordinates></" . static::name . ">";
+    }
+
+    public function toGPX($mode = null) {
+        if (!$mode) {
+            $mode = "wpt";
+        }
+        if ($mode != "wpt") {
+            throw new UnimplementedMethod(__FUNCTION__, get_called_class());
+        }
+        return "<wpt lon=\"{$this->lon}\" lat=\"{$this->lat}\"></wpt>";
     }
 
     public function toGeoJSON() {
@@ -622,6 +708,24 @@ class LineString extends MultiPoint {
         return "<" . static::name . "><coordinates>" . implode(" ", array_map(function($comp) {
                     return "{$comp->lon},{$comp->lat}";
                 }, $this->components)). "</coordinates></" . static::name . ">";
+    }
+
+    public function toGPX($mode = null) {
+        if (!$mode) {
+            $mode = "trkseg";
+        }
+        if ($mode != "trkseg" and $mode != "rte") {
+            throw new UnimplementedMethod(__FUNCTION__, get_called_class());
+        }
+        if ($mode == "trkseg") {
+            return '<trkseg>' . implode ("", array_map(function ($comp) {
+                return "<trkpt lon=\"{$comp->lon}\" lat=\"{$comp->lat}\"></trkpt>";
+            }, $this->components)). "</trkseg>";
+        } else {
+            return '<rte>' . implode ("", array_map(function ($comp) {
+                return "<rtept lon=\"{$comp->lon}\" lat=\"{$comp->lat}\"></rtept>";
+            }, $this->components)). "</rte>";
+        }
     }
 
 }
