@@ -206,7 +206,13 @@ class WKT extends Decoder {
     static protected function _parseCollection($str, $child_constructor) {
         $components = array();
         foreach (preg_split('/\)\s*,\s*\(/', trim($str)) as $compstr) {
-            $compstr = preg_replace('/^\(?(.*?)\)?$/', '$1', $compstr);
+            if (strlen($compstr) and $compstr[0] == '(') {
+                $compstr = substr($compstr, 1);
+            }
+            if (strlen($compstr) and $compstr[strlen($compstr)-1] == ')') {
+                $compstr = substr($compstr, 0, -1);
+            }
+
             $childs = call_user_func(array('self', 'parse' . $child_constructor), $compstr);
             $constructor = __NAMESPACE__ . '\\' . $child_constructor;
             $components[] = new $constructor($childs);
