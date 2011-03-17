@@ -95,4 +95,9 @@ class GeoJSON extends PHPUnit_Framework_TestCase {
         $this->assertEquals($geom->toGeoJSON(), '{"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[10,10]},{"type":"Point","coordinates":[30,30]},{"type":"LineString","coordinates":[[15,15],[20,20]]}]}');
     }
 
+    public function testFullFeature() {
+        $geom = $this->decoder->geomFromText('{"geometry":{"type":"Point","coordinates":[10, 10]},"title":"Random point","creator":"user"}');
+        $this->assertEquals($geom->toGeoJSON(), '{"type":"Point","coordinates":[10,10]}');
+    }
+
 }

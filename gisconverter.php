@@ -243,6 +243,10 @@ class GeoJSON extends Decoder {
     }
 
     static protected function _geomFromJson($json) {
+        if (property_exists ($json, "geometry") and is_object($json->geometry)) {
+            return self::_geomFromJson($json->geometry);
+        }
+
         if (!property_exists ($json, "type") or !is_string($json->type)) {
             throw new InvalidText(__CLASS__);
         }
