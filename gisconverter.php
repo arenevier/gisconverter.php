@@ -380,6 +380,22 @@ abstract class XML extends Decoder {
 
         return $geom;
     }
+
+    static protected function childElements($xml, $nodename = "") {
+        $nodename = strtolower($nodename);
+        $res = array();
+        foreach ($xml->children() as $child) {
+            if ($nodename) {
+                if (strtolower($child->getName()) == $nodename) {
+                    array_push($res, $child);
+                }
+            } else {
+                array_push($res, $child);
+            }
+        }
+        return $res;
+    }
+
     protected static function _geomFromXML($xml) {}
 }
 
@@ -404,14 +420,20 @@ class KML extends XML {
     }
 
     static protected function parsePolygon($xml) {
-        $ring = $xml->xpath('outerboundaryis/linearring');
+        $ring = array();
+        foreach (self::childElements($xml, 'outerboundaryis') as $elem) {
+            $ring = array_merge($ring, self::childElements($elem, 'linearring'));
+        }
+
         if (count($ring) != 1) {
             throw new InvalidText(__CLASS__);
         }
-        $components = array(new LinearRing(self::parseLinearRing($ring[0])));
 
-        foreach ($xml->xpath('innerboundaryis/linearring') as $ring) {
-            $components [] = new LinearRing(self::parseLinearRing($ring[0]));
+        $components = array(new LinearRing(self::parseLinearRing($ring[0])));
+        foreach (self::childElements($xml, 'innerboundaryis') as $elem) {
+            foreach (self::childElements($elem, 'linearring') as $ring) {
+                $components[] = new LinearRing(self::parseLinearRing($ring[0]));
+            }
         }
         return $components;
     }
@@ -425,7 +447,7 @@ class KML extends XML {
     }
 
     static protected function _extractCoordinates($xml) {
-        $coordinates = $xml->xpath('coordinates');
+        $coordinates = self::childElements($xml, 'coordinates');
         if (count($coordinates) != 1) {
             throw new InvalidText(__CLASS__);
         }
@@ -433,8 +455,29 @@ class KML extends XML {
     }
 
     static protected function _geomFromXML($xml) {
+        $nodename = strtolower($xml->getName());
+        if ($nodename == "kml" or $nodename == "placemark") {
+            $childs = $xml->children();
+            $components = array();
+            foreach (self::childElements($xml) as $child) {
+                try {
+                    $geom = self::_geomFromXML($child);
+                    $components[] = $geom;
+                } catch(InvalidText $e) {
+                }
+            }
+            $ncomp = count($components);
+            if ($ncomp == 0) {
+                throw new InvalidText(__CLASS__);
+            } else if ($ncomp == 1) {
+                return $components[0];
+            } else {
+                return new GeometryCollection($components);
+            }
+        }
+
         foreach (array("Point", "LineString", "LinearRing", "Polygon", "MultiGeometry") as $kml_type) {
-            if (strtolower($kml_type) == $xml->getName()) {
+            if (strtolower($kml_type) == $nodename) {
                 $type = $kml_type;
                 break;
             }

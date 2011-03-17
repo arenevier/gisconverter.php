@@ -135,6 +135,13 @@ class KML extends PHPUnit_Framework_TestCase {
         $geom->toGPX('wpt');
     }
 
+    public function testFullDoc() {
+        $geom = $this->decoder->geomFromText('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Placemark><Point><coordinates>10,10</coordinates></Point></Placemark></kml>'); // <? <-- vim syntax goes crazy
+        $this->assertEquals($geom->toKML(), '<Point><coordinates>10,10</coordinates></Point>');
+        $geom = $this->decoder->geomFromText('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Point><coordinates>10,10</coordinates></Point></kml>'); // <? <-- vim syntax goes crazy
+        $this->assertEquals($geom->toKML(), '<Point><coordinates>10,10</coordinates></Point>');
+    }
+
 }
 
 ?>
