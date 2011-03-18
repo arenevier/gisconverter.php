@@ -400,6 +400,26 @@ abstract class XML extends Decoder {
         return $res;
     }
 
+    static protected function _childsCollect($xml) {
+        $components = array();
+        foreach (self::childElements($xml) as $child) {
+            try {
+                $geom = static::_geomFromXML($child);
+                $components[] = $geom;
+            } catch(InvalidText $e) {
+            }
+        }
+
+        $ncomp = count($components);
+        if ($ncomp == 0) {
+            throw new InvalidText(__CLASS__);
+        } else if ($ncomp == 1) {
+            return $components[0];
+        } else {
+            return new GeometryCollection($components);
+        }
+    }
+
     protected static function _geomFromXML($xml) {}
 }
 
@@ -461,23 +481,7 @@ class KML extends XML {
     static protected function _geomFromXML($xml) {
         $nodename = strtolower($xml->getName());
         if ($nodename == "kml" or $nodename == "placemark") {
-            $childs = $xml->children();
-            $components = array();
-            foreach (self::childElements($xml) as $child) {
-                try {
-                    $geom = self::_geomFromXML($child);
-                    $components[] = $geom;
-                } catch(InvalidText $e) {
-                }
-            }
-            $ncomp = count($components);
-            if ($ncomp == 0) {
-                throw new InvalidText(__CLASS__);
-            } else if ($ncomp == 1) {
-                return $components[0];
-            } else {
-                return new GeometryCollection($components);
-            }
+            return self::_childsCollect($xml);
         }
 
         foreach (array("Point", "LineString", "LinearRing", "Polygon", "MultiGeometry") as $kml_type) {
@@ -569,6 +573,9 @@ class GPX extends XML {
     }
 
     static protected function _geomFromXML($xml) {
+        if ($xml->getName() == "gpx") {
+            return self::_childsCollect($xml);
+        }
         foreach (array("Trkseg", "Rte", "Wpt") as $kml_type) {
             if (strtolower($kml_type) == $xml->getName()) {
                 $type = $kml_type;
@@ -926,7 +933,6 @@ class MultiPolygon extends Collection {
         }
         $this->components = $components;
     }
-
 }
 
 class GeometryCollection extends Collection {
