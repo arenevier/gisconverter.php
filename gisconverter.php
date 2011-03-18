@@ -1,6 +1,6 @@
 <?php
 
-# Copyright (c) 2010 Arnaud Renevier, Inc, published under the modified BSD
+# Copyright (c) 2010-2011 Arnaud Renevier, Inc, published under the modified BSD
 # license.
 
 namespace gisconverter;
