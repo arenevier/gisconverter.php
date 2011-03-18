@@ -148,7 +148,7 @@ class WKT extends Decoder {
         }
 
         try {
-            $components = call_user_func(array('self', 'parse' . $type), $matches[2]);
+            $components = call_user_func(array('static', 'parse' . $type), $matches[2]);
         } catch(InvalidText $e) {
             throw new InvalidText(__CLASS__, $text);
         } catch(\Exception $e) {
@@ -168,37 +168,37 @@ class WKT extends Decoder {
         if (strlen ($str) == 0) {
             return array();
         }
-        return self::parseLineString($str);
+        return static::parseLineString($str);
     }
 
     static protected function parseLineString($str) {
         $components = array();
         foreach (preg_split('/,/', trim($str)) as $compstr) {
-            $components[] = new Point(self::parsePoint($compstr));
+            $components[] = new Point(static::parsePoint($compstr));
         }
         return $components;
     }
 
     static protected function parseMultiLineString($str) {
-        return self::_parseCollection($str, "LineString");
+        return static::_parseCollection($str, "LineString");
     }
 
     static protected function parseLinearRing($str) {
-        return self::parseLineString($str);
+        return static::parseLineString($str);
     }
 
     static protected function parsePolygon($str) {
-        return self::_parseCollection($str, "LinearRing");
+        return static::_parseCollection($str, "LinearRing");
     }
 
     static protected function parseMultiPolygon($str) {
-        return self::_parseCollection($str, "Polygon");
+        return static::_parseCollection($str, "Polygon");
     }
 
     static protected function parseGeometryCollection($str) {
         $components = array();
         foreach (preg_split('/,\s*(?=[A-Za-z])/', trim($str)) as $compstr) {
-            $components[] = self::geomFromText($compstr);
+            $components[] = static::geomFromText($compstr);
         }
         return $components;
     }
@@ -213,7 +213,7 @@ class WKT extends Decoder {
                 $compstr = substr($compstr, 0, -1);
             }
 
-            $childs = call_user_func(array('self', 'parse' . $child_constructor), $compstr);
+            $childs = call_user_func(array('static', 'parse' . $child_constructor), $compstr);
             $constructor = __NAMESPACE__ . '\\' . $child_constructor;
             $components[] = new $constructor($childs);
         }
@@ -232,7 +232,7 @@ class GeoJSON extends Decoder {
         }
 
         try {
-            $geom = self::_geomFromJson($obj);
+            $geom = static::_geomFromJson($obj);
         } catch(InvalidText $e) {
             throw new InvalidText(__CLASS__, $text);
         } catch(\Exception $e) {
@@ -244,7 +244,7 @@ class GeoJSON extends Decoder {
 
     static protected function _geomFromJson($json) {
         if (property_exists ($json, "geometry") and is_object($json->geometry)) {
-            return self::_geomFromJson($json->geometry);
+            return static::_geomFromJson($json->geometry);
         }
 
         if (!property_exists ($json, "type") or !is_string($json->type)) {
@@ -264,7 +264,7 @@ class GeoJSON extends Decoder {
         }
 
         try {
-            $components = call_user_func(array('self', 'parse'.$type), $json);
+            $components = call_user_func(array('static', 'parse'.$type), $json);
         } catch(InvalidText $e) {
             throw new InvalidText(__CLASS__);
         } catch(\Exception $e) {
@@ -292,7 +292,7 @@ class GeoJSON extends Decoder {
     }
 
     static protected function parseLineString($json) {
-        return self::parseMultiPoint($json);
+        return static::parseMultiPoint($json);
     }
 
     static protected function parseMultiLineString($json) {
@@ -311,7 +311,7 @@ class GeoJSON extends Decoder {
     }
 
     static protected function parseLinearRing($json) {
-        return self::parseMultiPoint($json);
+        return static::parseMultiPoint($json);
     }
 
     static protected function parsePolygon($json) {
@@ -354,7 +354,7 @@ class GeoJSON extends Decoder {
         }
         $components = array();
         foreach ($json->geometries as $geometry) {
-            $components[] = self::_geomFromJson($geometry);
+            $components[] = static::_geomFromJson($geometry);
         }
 
         return $components;
@@ -402,7 +402,7 @@ abstract class XML extends Decoder {
 
     static protected function _childsCollect($xml) {
         $components = array();
-        foreach (self::childElements($xml) as $child) {
+        foreach (static::childElements($xml) as $child) {
             try {
                 $geom = static::_geomFromXML($child);
                 $components[] = $geom;
@@ -425,13 +425,13 @@ abstract class XML extends Decoder {
 
 class KML extends XML {
     static protected function parsePoint($xml) {
-        $coordinates = self::_extractCoordinates($xml);
+        $coordinates = static::_extractCoordinates($xml);
         $coords = preg_split('/,/', (string)$coordinates[0]);
         return array_map("trim", $coords);
     }
 
     static protected function parseLineString($xml) {
-        $coordinates = self::_extractCoordinates($xml);
+        $coordinates = static::_extractCoordinates($xml);
         foreach (preg_split('/\s+/', trim((string)$coordinates[0])) as $compstr) {
             $coords = preg_split('/,/', $compstr);
             $components[] = new Point($coords);
@@ -440,23 +440,23 @@ class KML extends XML {
     }
 
     static protected function parseLinearRing($xml) {
-        return self::parseLineString($xml);
+        return static::parseLineString($xml);
     }
 
     static protected function parsePolygon($xml) {
         $ring = array();
-        foreach (self::childElements($xml, 'outerboundaryis') as $elem) {
-            $ring = array_merge($ring, self::childElements($elem, 'linearring'));
+        foreach (static::childElements($xml, 'outerboundaryis') as $elem) {
+            $ring = array_merge($ring, static::childElements($elem, 'linearring'));
         }
 
         if (count($ring) != 1) {
             throw new InvalidText(__CLASS__);
         }
 
-        $components = array(new LinearRing(self::parseLinearRing($ring[0])));
-        foreach (self::childElements($xml, 'innerboundaryis') as $elem) {
-            foreach (self::childElements($elem, 'linearring') as $ring) {
-                $components[] = new LinearRing(self::parseLinearRing($ring[0]));
+        $components = array(new LinearRing(static::parseLinearRing($ring[0])));
+        foreach (static::childElements($xml, 'innerboundaryis') as $elem) {
+            foreach (static::childElements($elem, 'linearring') as $ring) {
+                $components[] = new LinearRing(static::parseLinearRing($ring[0]));
             }
         }
         return $components;
@@ -465,13 +465,13 @@ class KML extends XML {
     static protected function parseMultiGeometry($xml) {
         $components = array();
         foreach ($xml->children() as $child) {
-            $components[] = self::_geomFromXML($child);
+            $components[] = static::_geomFromXML($child);
         }
         return $components;
     }
 
     static protected function _extractCoordinates($xml) {
-        $coordinates = self::childElements($xml, 'coordinates');
+        $coordinates = static::childElements($xml, 'coordinates');
         if (count($coordinates) != 1) {
             throw new InvalidText(__CLASS__);
         }
@@ -481,7 +481,7 @@ class KML extends XML {
     static protected function _geomFromXML($xml) {
         $nodename = strtolower($xml->getName());
         if ($nodename == "kml" or $nodename == "placemark") {
-            return self::_childsCollect($xml);
+            return static::_childsCollect($xml);
         }
 
         foreach (array("Point", "LineString", "LinearRing", "Polygon", "MultiGeometry") as $kml_type) {
@@ -496,7 +496,7 @@ class KML extends XML {
         }
 
         try {
-            $components = call_user_func(array('self', 'parse'.$type), $xml);
+            $components = call_user_func(array('static', 'parse'.$type), $xml);
         } catch(InvalidText $e) {
             throw new InvalidText(__CLASS__);
         } catch(\Exception $e) {
@@ -552,7 +552,7 @@ class GPX extends XML {
         $res = array();
         foreach ($xml->children() as $elem) {
             if (strtolower($elem->getName()) == "trkpt") {
-                $res[] = new Point(self::_extractCoordinates($elem));
+                $res[] = new Point(static::_extractCoordinates($elem));
             }
         }
         return $res;
@@ -562,19 +562,19 @@ class GPX extends XML {
         $res = array();
         foreach ($xml->children() as $elem) {
             if (strtolower($elem->getName()) == "rtept") {
-                $res[] = new Point(self::_extractCoordinates($elem));
+                $res[] = new Point(static::_extractCoordinates($elem));
             }
         }
         return $res;
     }
 
     static protected function parseWpt($xml) {
-        return self::_extractCoordinates($xml);
+        return static::_extractCoordinates($xml);
     }
 
     static protected function _geomFromXML($xml) {
         if ($xml->getName() == "gpx") {
-            return self::_childsCollect($xml);
+            return static::_childsCollect($xml);
         }
         foreach (array("Trkseg", "Rte", "Wpt") as $kml_type) {
             if (strtolower($kml_type) == $xml->getName()) {
@@ -588,7 +588,7 @@ class GPX extends XML {
         }
 
         try {
-            $components = call_user_func(array('self', 'parse'.$type), $xml);
+            $components = call_user_func(array('static', 'parse'.$type), $xml);
         } catch(InvalidText $e) {
             throw new InvalidText(__CLASS__);
         } catch(\Exception $e) {
@@ -917,7 +917,7 @@ class Polygon extends Collection {
         $str .= implode("", array_map(function($comp) {
             return '<innerBoundaryIs>' . $comp->toKML() . '</innerBoundaryIs>';
         }, array_slice($this->components, 1)));
-        return '<' . self::name . '>' . $str . '</' . self::name . '>';
+        return '<' . static::name . '>' . $str . '</' . static::name . '>';
     }
 
 }
