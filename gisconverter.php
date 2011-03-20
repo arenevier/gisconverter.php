@@ -573,7 +573,8 @@ class GPX extends XML {
     }
 
     static protected function _geomFromXML($xml) {
-        if ($xml->getName() == "gpx") {
+        $nodename = strtolower($xml->getName());
+        if ($nodename == "gpx" or $nodename == "trk") {
             return static::_childsCollect($xml);
         }
         foreach (array("Trkseg", "Rte", "Wpt") as $kml_type) {
