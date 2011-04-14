@@ -480,7 +480,7 @@ class KML extends XML {
 
     static protected function _geomFromXML($xml) {
         $nodename = strtolower($xml->getName());
-        if ($nodename == "kml" or $nodename == "placemark") {
+        if ($nodename == "kml" or $nodename == "document" or $nodename == "placemark") {
             return static::_childsCollect($xml);
         }
 

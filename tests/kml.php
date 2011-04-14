@@ -140,6 +140,8 @@ class KML extends PHPUnit_Framework_TestCase {
         $this->assertEquals($geom->toKML(), '<Point><coordinates>10,10</coordinates></Point>');
         $geom = $this->decoder->geomFromText('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Point><coordinates>10,10</coordinates></Point></kml>'); // <? <-- vim syntax goes crazy
         $this->assertEquals($geom->toKML(), '<Point><coordinates>10,10</coordinates></Point>');
+        $geom = $this->decoder->geomFromText('<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><Placemark><Point><coordinates>10,10</coordinates></Point></Placemark></Document></kml>'); // <? <-- vim syntax goes crazy
+        $this->assertEquals($geom->toKML(), '<Point><coordinates>10,10</coordinates></Point>');
     }
 
 }
