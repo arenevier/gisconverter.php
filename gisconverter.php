@@ -367,9 +367,8 @@ abstract class XML extends Decoder {
         if (!function_exists("simplexml_load_string") || !function_exists("libxml_use_internal_errors")) {
             throw new UnavailableResource("simpleXML");
         }
-        $ltext = strtolower($text);
         libxml_use_internal_errors(true);
-        $xmlobj = simplexml_load_string($ltext);
+        $xmlobj = simplexml_load_string($text);
         if ($xmlobj === false) {
             throw new InvalidText(__CLASS__, $text);
         }
