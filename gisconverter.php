@@ -72,6 +72,12 @@ abstract class Decoder implements iDecoder {
 }
 
 interface iGeometry {
+
+    /*
+     * @return array
+     */
+    public function toGeoArray();
+
     /*
      * @return string
      */
@@ -103,8 +109,12 @@ interface iGeometry {
 abstract class Geometry implements iGeometry {
     const name = "";
 
-    public function toGeoJSON() {
+    public function toGeoArray() {
         throw new UnimplementedMethod(__FUNCTION__, get_called_class());
+    }
+
+    public function toGeoJSON() {
+        return json_encode($this->toGeoArray());
     }
 
     public function toKML() {
@@ -654,9 +664,9 @@ class Point extends Geometry {
         return "<wpt lon=\"{$this->lon}\" lat=\"{$this->lat}\"></wpt>";
     }
 
-    public function toGeoJSON() {
-        $value = (object)array ('type' => static::name, 'coordinates' => array($this->lon, $this->lat));
-        return json_encode($value);
+    public function toGeoArray() {
+        $value = array ('type' => static::name, 'coordinates' => array($this->lon, $this->lat));
+        return $value;
     }
 
     public function equals(Geometry $geom) {
@@ -708,7 +718,7 @@ abstract class Collection extends Geometry {
         return strtoupper(static::name) . call_user_func($recursiveWKT, $this);
     }
 
-    public function toGeoJSON() {
+    public function toGeoArray() {
         $recurviseJSON = function ($geom) use (&$recurviseJSON) {
             if ($geom instanceof Point) {
                 return array($geom->lon, $geom->lat);
@@ -717,7 +727,7 @@ abstract class Collection extends Geometry {
             }
         };
         $value = (object)array ('type' => static::name, 'coordinates' => call_user_func($recurviseJSON, $this));
-        return json_encode($value);
+        return $value;
     }
 
     public function toKML() {
@@ -953,14 +963,14 @@ class GeometryCollection extends Collection {
         }, $this->components)) . ')';
     }
 
-    public function toGeoJSON() {
+    public function toGeoArray() {
         $value = (object)array ('type' => static::name, 'geometries' =>
             array_map(function ($comp) {
                 // XXX: quite ugly
-                return json_decode($comp->toGeoJSON());
+                return $comp->toGeoArray();
             }, $this->components)
         );
-        return json_encode($value);
+        return $value;
     }
 }
 
